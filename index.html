@@ -1176,6 +1176,22 @@
     }
   </style>
 <style>
+    .playlist-song {
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .playlist-song:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .playlist-song.active {
+      background: rgba(255, 255, 255, 0.2);
+      font-weight: bold;
+    }
+
     .starter-overlay {
         position: fixed;
         top: 0;
@@ -1272,7 +1288,7 @@
 
       <!-- Music Bar -->
       <div class="music-bar">
-        <img src="cover.jpg" alt="Album Cover" class="album-cover" />
+        <img src="cover.jpg" alt="Album Cover" class="album-cover" id="albumCover"/>
         <div class="track-info">
           <h3 class="song-title">Goth</h3>
           <p class="artist-name">sidewalks and skeletons</p>
@@ -1290,6 +1306,24 @@
           <i class="fas fa-volume-up"></i>
           <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" />
         </div>
+      </div>
+
+      <!-- Playlist Toggle Button -->
+      <button id="togglePlaylistBtn" class="btn btn-outline" style="margin-bottom: 10px;">Songs</button>
+
+      <!-- Playlist -->
+      <div id="playlist" class="glass" style="display: none; margin-top: 10px; padding: 15px; text-align: left;">
+        <ul id="playlist-songs" style="list-style: none; padding: 0; max-height: 150px; overflow-y: auto;">
+          <li class="playlist-song" data-src="goth.mp3" data-title="Goth" data-artist="sidewalks and skeletons" data-img="cover.jpg">
+            <span class="song-title">Goth</span> - <span class="artist-name">sidewalks and skeletons</span>
+          </li>
+          <li class="playlist-song" data-src="magnolia.mp3" data-title="Magnolia" data-artist="Playboi Carti" data-img="cover2.jpg">
+            <span class="song-title">Magnolia</span> - <span class="artist-name">Playboi Carti</span>
+          </li>
+          <li class="playlist-song" data-src="passionfruit.mp3" data-title="Passionfruit" data-artist="Drake" data-img="cover3.jpg">
+            <span class="song-title">Passionfruit</span> - <span class="artist-name">Drake</span>
+          </li>
+        </ul>
       </div>
 
       <h1>
@@ -1494,115 +1528,51 @@
     const currentTimeEl = document.getElementById("currentTime");
     const durationEl = document.getElementById("duration");
     const volumeSlider = document.getElementById("volumeSlider");
+    const playlistSongs = document.getElementById("playlist-songs");
+    const songTitleEl = document.querySelector(".music-bar .song-title");
+    const artistNameEl = document.querySelector(".music-bar .artist-name");
+    const togglePlaylistBtn = document.getElementById("togglePlaylistBtn");
+    const playlist = document.getElementById("playlist");
+    const albumCover = document.getElementById("albumCover");
 
-    playPauseBtn.addEventListener("click", () => {
-      if (audioPlayer.paused) {
-        audioPlayer.play();
-        playPauseIcon.classList.replace("fa-play", "fa-pause");
+    togglePlaylistBtn.addEventListener("click", () => {
+      if (playlist.style.display === "none") {
+        playlist.style.display = "block";
       } else {
-        audioPlayer.pause();
-        playPauseIcon.classList.replace("fa-pause", "fa-play");
+        playlist.style.display = "none";
       }
     });
 
-    audioPlayer.addEventListener("loadedmetadata", () => {
-      progressBar.max = Math.floor(audioPlayer.duration);
-      durationEl.textContent = formatTime(audioPlayer.duration);
-    });
+    playlistSongs.addEventListener("click", (e) => {
+      const songItem = e.target.closest(".playlist-song");
+      if (songItem) {
+        const src = songItem.dataset.src;
+        const title = songItem.dataset.title;
+        const artist = songItem.dataset.artist;
+        const img = songItem.dataset.img;
 
-    audioPlayer.addEventListener("timeupdate", () => {
-      progressBar.value = Math.floor(audioPlayer.currentTime);
-      currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
-    });
+        audioPlayer.src = src;
+        songTitleEl.textContent = title;
+        artistNameEl.textContent = artist;
+        albumCover.src = img;
 
-    progressBar.addEventListener("input", () => {
-      audioPlayer.currentTime = progressBar.value;
-    });
+        audioPlayer.play();
+        playPauseIcon.classList.replace("fa-play", "fa-pause");
 
-    volumeSlider.addEventListener("input", () => {
-      audioPlayer.volume = volumeSlider.value;
-    });
-
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-    }
-    
-    //Navbar scroll effect
-    window.addEventListener('scroll', function() {
-        const navbar = document.getElementById('navbar');
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
+        // Update active song
+        const currentActive = playlistSongs.querySelector(".active");
+        if (currentActive) {
+          currentActive.classList.remove("active");
         }
-    });
-    
-    // Form submission
-    document.getElementById('contactForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        alert('Thanks for your message! I\'ll get back to you soon.');
-        this.reset();
-    });
-    
-    // Animation on scroll
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animated');
-            } else {
-                entry.target.classList.remove('animated');
-            }
-        });
-    }, observerOptions);
-    
-    document.querySelectorAll('.project-card, .about-img, .about-text, .contact-item, .contact-form').forEach(el => {
-        observer.observe(el);
+        songItem.classList.add("active");
+      }
     });
 
-    const starterOverlay = document.getElementById('starterOverlay');
-    const mainContent = document.getElementById('main-content');
-    const enterText = document.getElementById('enterText');
-    const presentedBy = document.getElementById('presentedBy');
-
-    starterOverlay.addEventListener('click', () => {
-        enterText.style.opacity = '0';
-        setTimeout(() => {
-            presentedBy.style.opacity = '1';
-        }, 500);
-
-        setTimeout(() => {
-            starterOverlay.style.opacity = '0';
-            starterOverlay.style.backdropFilter = 'blur(0px)';
-            mainContent.style.opacity = '1';
-            window.scrollTo(0, 0);
-
-            setTimeout(() => {
-                starterOverlay.style.display = 'none';
-                const elementsToAnimate = document.querySelectorAll('.initially-hidden');
-                elementsToAnimate.forEach((el, index) => {
-                    setTimeout(() => {
-                        el.classList.remove('initially-hidden');
-                    }, index * 200);
-                });
-                audioPlayer.play();
-                playPauseIcon.classList.replace("fa-play", "fa-pause");
-            }, 1000);
-        }, 2000);
-    }, { once: true });
-
-    const colorSlider = document.getElementById('colorSlider');
-    colorSlider.addEventListener('input', () => {
-        const hue = colorSlider.value;
-        document.documentElement.style.setProperty('--white', `hsl(${hue}, 100%, 50%)`);
-    });
+    // Set initial active song
+    const initialSong = playlistSongs.querySelector(`[data-src="${audioPlayer.src.split('/').pop()}"]`);
+    if (initialSong) {
+        initialSong.classList.add("active");
+    }
   </script>
 </body>
 
